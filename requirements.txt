@@ -2,3 +2,6 @@ ultralytics>=8.0.0
 opencv-python>=4.6.0
 roboflow>=1.1.0
 numpy>=1.20
+tensorflow>=2.0.0
+pyserial
+Jetson.GPIO
