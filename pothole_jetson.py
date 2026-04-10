@@ -28,10 +28,10 @@ LED_RED = 13     # Severe
 BUZZER_PIN = 23
 
 # Processing parameters
-FRAME_SKIP = 3  # Process every 3rd frame
+FRAME_SKIP = 2  # Reduced from 3 to improve real-time responsiveness
 LOG_FILE = "pothole_log.csv"
-CONFIDENCE_THRESHOLD = 0.55  # Lowered slightly to catch missed potholes
-MIN_AREA = 200               # Lowered to catch smaller/distant potholes
+CONFIDENCE_THRESHOLD = 0.40  # Lowered from 0.55 to catch more potholes
+MIN_AREA = 100               # Lowered from 200 to catch smaller/distant potholes
 
 class HardwareController:
     def __init__(self):
@@ -218,13 +218,19 @@ class PotholeSystem:
                         
                         # Only classify as "Severe" if the CNN is highly confident (> 65%).
                         # Otherwise, fallback to "Moderate" to prevent false alarms.
-                        if severity == "Severe" and cnn_conf < 0.65:
-                            severity = "Moderate"
+                        if severity == "Severe":
+                            # Size-based heuristic: Small potholes (area < 500) are rarely Severe 
+                            # unless the model is extremely confident (> 85%).
+                            if area < 500:
+                                if cnn_conf < 0.85:
+                                    severity = "Moderate"
+                            elif cnn_conf < 0.65:
+                                severity = "Moderate"
                             
-                        # If CNN is entirely unsure about it being a pothole, but YOLO found it,
-                        # YOLO knows it's a pothole. We default to "Moderate" if CNN says "Normal".
+                        # If CNN says "Normal", it means it's likely a false detection 
+                        # (shadow, patch, or normal road). We reject it.
                         if severity == "Normal":
-                            severity = "Moderate"
+                            continue # Skip this detection
                         
                         if severity != "Normal":
                             # We will show the CNN's confidence instead of YOLO's to debug severity

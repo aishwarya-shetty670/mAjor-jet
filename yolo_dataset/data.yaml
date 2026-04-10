@@ -1,0 +1,10 @@
+
+path: d:/combinee/yolo_dataset
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: moderate
+  1: normal
+  2: severe
